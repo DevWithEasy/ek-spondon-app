@@ -74,6 +74,7 @@ function AuthLayout() {
       },
       headerTintColor: "red",
     }}>
+      <Stack.Screen name="splash_screen" options={{ headerShown: false }}/>
       <Stack.Screen name="(app)" options={{ headerShown: false }}/>
       <Stack.Screen name="signin" options={{ headerShown: false }} />
       <Stack.Screen name="signup" options={{ title: 'নতুন সদস্য নিবন্ধন করুন' }} />

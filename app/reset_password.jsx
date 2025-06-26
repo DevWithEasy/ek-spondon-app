@@ -255,9 +255,9 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: 'white',
+    fontFamily: 'HindSiliguri_600SemiBold',
+    color: '#fff',
     fontSize: 16,
-    fontFamily: 'HindSiliguri_400Regular',
   },
   footerText: {
     color: '#777',

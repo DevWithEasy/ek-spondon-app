@@ -140,8 +140,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
-    fontFamily: 'HindSiliguri_400Regular',
+    fontFamily: 'HindSiliguri_600SemiBold',
+    color: '#fff',
+    fontSize: 16,
   },
   successContainer: {
     alignItems: 'center',

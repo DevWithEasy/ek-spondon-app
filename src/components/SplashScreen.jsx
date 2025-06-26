@@ -17,8 +17,8 @@ export default function SplashScreen() {
 
     Animated.timing(slideAnim, {
       toValue: 0,
-      duration: 1000,
-      delay: 500,
+      duration: 700,
+      delay: 300,
       easing: Easing.out(Easing.exp),
       useNativeDriver: true,
     }).start();
