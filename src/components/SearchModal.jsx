@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
+import { MaterialIcons } from '@expo/vector-icons';
 import districts from "../../assets/json/districts.json";
 import upazilas from "../../assets/json/upazilas.json";
 
@@ -52,7 +53,6 @@ export default function SearchModal({ visible, onClose, setDonars }) {
   const handleLogin = async () => {
     if (!validateForm()) return;
     try {
-      // do something (API call or navigation)
       onClose();
       setDonars([
         {
@@ -140,6 +140,7 @@ export default function SearchModal({ visible, onClose, setDonars }) {
   };
 
   const locationPickerStyles = (fieldName) => ({
+    ...pickerSelectStyles,
     inputIOS: {
       ...pickerSelectStyles.inputIOS,
       borderColor: errors[fieldName] ? "red" : "#ddd",
@@ -148,16 +149,21 @@ export default function SearchModal({ visible, onClose, setDonars }) {
       ...pickerSelectStyles.inputAndroid,
       borderColor: errors[fieldName] ? "red" : "#ddd",
     },
-    placeholder: {
-      color: "#b3b6b7",
-    },
   });
+
+  // Custom dropdown icon component
+  const DropdownIcon = () => (
+    <MaterialIcons name="arrow-drop-down" size={24} color="#d32f2f" />
+  );
+
   return (
     <Modal
       animationType="slide"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      hardwareAccelerated={true}
+      statusBarTranslucent={true}
     >
       <View style={styles.backdrop}>
         <View style={styles.modalContainer}>
@@ -167,9 +173,7 @@ export default function SearchModal({ visible, onClose, setDonars }) {
             {/* Blood Group Picker */}
             <View style={{ width: "100%", marginBottom: 10 }}>
               <RNPickerSelect
-                onValueChange={(value) =>
-                  handleInputChange("bloodGroup", value)
-                }
+                onValueChange={(value) => handleInputChange("bloodGroup", value)}
                 value={formData.bloodGroup}
                 placeholder={{
                   label: "রক্তের গ্রুপ নির্বাচন করুন",
@@ -188,7 +192,8 @@ export default function SearchModal({ visible, onClose, setDonars }) {
                 ]}
                 style={pickerSelectStyles}
                 useNativeAndroidPickerStyle={false}
-                Icon={() => <Text style={{ color: "#ddd" }}>▼</Text>}
+                Icon={DropdownIcon}
+                fixAndroidTouchableBug={true}
               />
               {errors.bloodGroup && (
                 <Text style={styles.errorText}>{errors.bloodGroup}</Text>
@@ -212,7 +217,8 @@ export default function SearchModal({ visible, onClose, setDonars }) {
                 }))}
                 style={locationPickerStyles("district")}
                 useNativeAndroidPickerStyle={false}
-                Icon={() => <Text style={{ color: "#ddd" }}>▼</Text>}
+                Icon={DropdownIcon}
+                fixAndroidTouchableBug={true}
               />
               {errors.district && (
                 <Text style={styles.errorText}>{errors.district}</Text>
@@ -237,12 +243,14 @@ export default function SearchModal({ visible, onClose, setDonars }) {
                 disabled={!formData.district}
                 style={locationPickerStyles("upazila")}
                 useNativeAndroidPickerStyle={false}
-                Icon={() => <Text style={{ color: "#ddd" }}>▼</Text>}
+                Icon={DropdownIcon}
+                fixAndroidTouchableBug={true}
               />
               {errors.upazila && (
                 <Text style={styles.errorText}>{errors.upazila}</Text>
               )}
             </View>
+
             <View
               style={{
                 width: "100%",
@@ -255,26 +263,9 @@ export default function SearchModal({ visible, onClose, setDonars }) {
               </Pressable>
               <Pressable
                 onPress={handleLogin}
-                style={{
-                  width: "49%",
-                  height: 50,
-                  backgroundColor: "#007AFF",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginTop: 10,
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  borderColor: "#ddd",
-                }}
+                style={styles.searchButton}
               >
-                <Text
-                  style={{
-                    fontFamily: "HindSiliguri_400Regular",
-                    color: "white",
-                  }}
-                >
-                  অনুসন্ধান করুন
-                </Text>
+                <Text style={styles.searchButtonText}>অনুসন্ধান করুন</Text>
               </Pressable>
             </View>
           </View>
@@ -319,6 +310,27 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     color: "#fff",
+    fontFamily: "HindSiliguri_400Regular",
+  },
+  searchButton: {
+    width: "49%",
+    height: 50,
+    backgroundColor: "#007AFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  searchButtonText: {
+    fontFamily: "HindSiliguri_400Regular",
+    color: "white",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
     fontFamily: "HindSiliguri_400Regular",
   },
 });

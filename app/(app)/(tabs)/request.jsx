@@ -1,4 +1,4 @@
-import DateTimePicker from "@react-native-community/datetimepicker";
+import SimpleDateInput from "../../../src/components/SimpleDateInput";
 import { useState } from "react";
 import {
   Alert,
@@ -27,27 +27,7 @@ export default function BloodRequestForm() {
   });
 
   const [errors, setErrors] = useState({});
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [isDateSelected, setIsDateSelected] = useState(false);
-
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || formData.date;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (currentDate < today) {
-      Alert.alert(
-        "ব্যর্থ হয়েছে",
-        "অনুগ্রহ করে আজকের বা আজকের পরের তারিখ নির্বাচন করুন।"
-      );
-      setShowDatePicker(false);
-      return;
-    }
-
-    setShowDatePicker(false);
-    setFormData({ ...formData, date: currentDate });
-    setIsDateSelected(true);
-  };
+  const [donateDate, setDonateDate] = useState(null);
 
   const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
@@ -64,11 +44,18 @@ export default function BloodRequestForm() {
     if (!formData.bloodGroup) newErrors.bloodGroup = "রক্তের গ্রুপ নির্বাচন করুন";
     if (!formData.hemoglobin.trim()) newErrors.hemoglobin = "হিমোগ্লোবিনের পরিমাণ লিখুন";
     if (!formData.request_bag.trim()) newErrors.request_bag = "ব্যাগ সংখ্যা লিখুন";
-    if (!isDateSelected) newErrors.date = "তারিখ নির্বাচন করুন";
     if (!formData.location.trim()) newErrors.location = "অবস্থান লিখুন";
     if (!formData.phone.trim()) newErrors.phone = "ফোন নম্বর লিখুন";
     else if (!/^(?:\+88|01)?(?:\d{11}|\d{13})$/.test(formData.phone)) {
       newErrors.phone = "সঠিক ফোন নম্বর লিখুন";
+    }
+    if (!donateDate) {
+      newErrors.donateDate = "জন্ম তারিখ প্রয়োজন";
+    } else {
+      const today = new Date();
+      if (donateDate > today) {
+        newErrors.donateDate = "ভবিষ্যতের তারিখ দিতে পারবেন না";
+      }
     }
 
     setErrors(newErrors);
@@ -96,7 +83,6 @@ export default function BloodRequestForm() {
               location: "",
               phone: "",
             });
-            setIsDateSelected(false);
           }
         }
       ]
@@ -240,30 +226,12 @@ export default function BloodRequestForm() {
           </View>
 
           {/* Date Picker */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>রক্তদানের তারিখ</Text>
-            <TouchableOpacity 
-              style={[styles.input, styles.dateInput]}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <MaterialIcons name="calendar-today" size={20} color="#d32f2f" />
-              <Text style={styles.dateText}>
-                {isDateSelected
-                  ? formData.date.toLocaleDateString("bn-BD")
-                  : "তারিখ নির্বাচন করুন"}
-              </Text>
-            </TouchableOpacity>
-            {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
-            {showDatePicker && (
-              <DateTimePicker
-                value={formData.date}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-                minimumDate={new Date()}
-              />
-            )}
-          </View>
+          <SimpleDateInput
+            title = 'রক্তদানের তারিখ'
+            value={donateDate}
+            onChange={(date) => setDonateDate(date)}
+            error={errors.donateDate}
+          />
 
           {/* Location */}
           <View style={styles.inputContainer}>

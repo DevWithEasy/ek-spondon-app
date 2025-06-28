@@ -1,6 +1,6 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import SimpleDateInput from "../src/components/SimpleDateInput";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -13,7 +13,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import districts from "../assets/json/districts.json";
@@ -35,17 +35,8 @@ export default function Signup() {
   const [errors, setErrors] = useState({});
   const [filteredDistricts, setFilteredDistricts] = useState([]);
   const [filteredUpazilas, setFilteredUpazilas] = useState([]);
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [isDateSelected, setIsDateSelected] = useState(false);
+  const [birthDate, setBirthDate] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(false);
-    setDate(currentDate);
-    setIsDateSelected(true);
-  };
 
   // Filter districts based on selected division
   useEffect(() => {
@@ -112,30 +103,40 @@ export default function Signup() {
     const newErrors = {};
 
     if (!formData.name.trim()) newErrors.name = "নাম লিখুন";
-    if (!isDateSelected) newErrors.date = "জন্ম তারিখ নির্বাচন করুন";
-    if (!formData.bloodGroup) newErrors.bloodGroup = "রক্তের গ্রুপ নির্বাচন করুন";
-    
+    if (!formData.bloodGroup)
+      newErrors.bloodGroup = "রক্তের গ্রুপ নির্বাচন করুন";
+
     if (!formData.email.trim()) {
       newErrors.email = "ই-মেইল লিখুন";
     } else if (!validateEmail(formData.email)) {
       newErrors.email = "সঠিক ই-মেইল লিখুন";
     }
-    
+
     if (!formData.password.trim()) {
       newErrors.password = "পাসওয়ার্ড দিন";
     } else if (!validatePassword(formData.password)) {
-      newErrors.password = "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের এবং অক্ষর ও সংখ্যা থাকতে হবে";
+      newErrors.password =
+        "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের এবং অক্ষর ও সংখ্যা থাকতে হবে";
     }
-    
+
     if (!formData.confirmPassword.trim()) {
       newErrors.confirmPassword = "পাসওয়ার্ড নিশ্চিত করুন";
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "পাসওয়ার্ড মিলছে না";
     }
-    
+
     if (!formData.division) newErrors.division = "বিভাগ নির্বাচন করুন";
     if (!formData.district) newErrors.district = "জেলা নির্বাচন করুন";
     if (!formData.upazila) newErrors.upazila = "উপজেলা নির্বাচন করুন";
+
+    if (!birthDate) {
+      newErrors.birthDate = "জন্ম তারিখ প্রয়োজন";
+    } else {
+      const today = new Date();
+      if (birthDate > today) {
+        newErrors.birthDate = "ভবিষ্যতের তারিখ দিতে পারবেন না";
+      }
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -145,11 +146,11 @@ export default function Signup() {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    
+
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       await AsyncStorage.setItem("isLoggedIn", JSON.stringify(true));
       Alert.alert("সফল!", "আপনার একাউন্ট সফলভাবে তৈরি হয়েছে");
       router.replace("/");
@@ -204,8 +205,10 @@ export default function Signup() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.subtitle}>
-            আপনার এক বিন্দু রক্ত হতে পারে কারো জীবনের জন্য অমূল্য উপহার। সঠিক তথ্য দিয়ে একাউন্ট করে আপনিও হতে পারেন একজন গর্বিত ডোনার এবং আপনি খুঁজে নিন অমুল্য রক্ত ডোনারদের কাছ থেকে। 
-          </Text>
+          আপনার এক বিন্দু রক্ত হতে পারে কারো জীবনের জন্য অমূল্য উপহার। সঠিক তথ্য
+          দিয়ে একাউন্ট করে আপনিও হতে পারেন একজন গর্বিত ডোনার এবং আপনি খুঁজে নিন
+          অমুল্য রক্ত ডোনারদের কাছ থেকে।
+        </Text>
         {/* Form */}
         <View style={styles.formContainer}>
           {/* Name */}
@@ -221,29 +224,12 @@ export default function Signup() {
             {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
           </View>
 
-          {/* Date of Birth */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>জন্ম তারিখ</Text>
-            <TouchableOpacity 
-              style={[styles.input, styles.dateInput]}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <MaterialIcons name="calendar-today" size={20} color="#d32f2f" />
-              <Text style={styles.dateText}>
-                {isDateSelected ? date.toLocaleDateString("bn-BD") : "তারিখ নির্বাচন করুন"}
-              </Text>
-            </TouchableOpacity>
-            {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
-            {showDatePicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
-                maximumDate={new Date()}
-              />
-            )}
-          </View>
+          <SimpleDateInput
+            title = 'জন্মতারিখ'
+            value={birthDate}
+            onChange={(date) => setBirthDate(date)}
+            error={errors.birthDate}
+          />
 
           {/* Blood Group */}
           <View style={styles.inputContainer}>
@@ -268,7 +254,11 @@ export default function Signup() {
               style={pickerSelectStyles}
               useNativeAndroidPickerStyle={false}
               Icon={() => (
-                <MaterialIcons name="arrow-drop-down" size={24} color="#d32f2f" />
+                <MaterialIcons
+                  name="arrow-drop-down"
+                  size={24}
+                  color="#d32f2f"
+                />
               )}
             />
             {errors.bloodGroup && (
@@ -279,7 +269,7 @@ export default function Signup() {
           {/* Location Fields */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>ঠিকানা</Text>
-            
+
             {/* Division */}
             <Text style={styles.subLabel}>বিভাগ</Text>
             <RNPickerSelect
@@ -297,7 +287,11 @@ export default function Signup() {
               style={locationPickerStyles("division")}
               useNativeAndroidPickerStyle={false}
               Icon={() => (
-                <MaterialIcons name="arrow-drop-down" size={24} color="#d32f2f" />
+                <MaterialIcons
+                  name="arrow-drop-down"
+                  size={24}
+                  color="#d32f2f"
+                />
               )}
             />
             {errors.division && (
@@ -322,7 +316,11 @@ export default function Signup() {
               style={locationPickerStyles("district")}
               useNativeAndroidPickerStyle={false}
               Icon={() => (
-                <MaterialIcons name="arrow-drop-down" size={24} color="#d32f2f" />
+                <MaterialIcons
+                  name="arrow-drop-down"
+                  size={24}
+                  color="#d32f2f"
+                />
               )}
             />
             {errors.district && (
@@ -347,7 +345,11 @@ export default function Signup() {
               style={locationPickerStyles("upazila")}
               useNativeAndroidPickerStyle={false}
               Icon={() => (
-                <MaterialIcons name="arrow-drop-down" size={24} color="#d32f2f" />
+                <MaterialIcons
+                  name="arrow-drop-down"
+                  size={24}
+                  color="#d32f2f"
+                />
               )}
             />
             {errors.upazila && (
@@ -375,7 +377,9 @@ export default function Signup() {
                 }
               }}
             />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
           </View>
 
           {/* Password */}
@@ -392,7 +396,8 @@ export default function Signup() {
                 if (formData.password && !validatePassword(formData.password)) {
                   setErrors({
                     ...errors,
-                    password: "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের এবং অক্ষর ও সংখ্যা থাকতে হবে",
+                    password:
+                      "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের এবং অক্ষর ও সংখ্যা থাকতে হবে",
                   });
                 }
               }}
@@ -409,9 +414,14 @@ export default function Signup() {
               placeholder="পাসওয়ার্ড আবার লিখুন"
               placeholderTextColor="#b3b6b7"
               value={formData.confirmPassword}
-              onChangeText={(text) => handleInputChange("confirmPassword", text)}
+              onChangeText={(text) =>
+                handleInputChange("confirmPassword", text)
+              }
               secureTextEntry
-              style={[styles.input, errors.confirmPassword && styles.inputError]}
+              style={[
+                styles.input,
+                errors.confirmPassword && styles.inputError,
+              ]}
               onBlur={() => {
                 if (
                   formData.confirmPassword &&
@@ -461,7 +471,7 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
     paddingBottom: 10,
   },
@@ -472,16 +482,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   tagline: {
-    fontFamily: 'HindSiliguri_600SemiBold',
+    fontFamily: "HindSiliguri_600SemiBold",
     fontSize: 16,
-    color: '#d32f2f',
+    color: "#d32f2f",
     marginBottom: 5,
   },
   subtitle: {
-    fontFamily: 'HindSiliguri_400Regular',
+    fontFamily: "HindSiliguri_400Regular",
     fontSize: 14,
-    color: '#666',
-    paddingHorizontal : 20
+    color: "#666",
+    paddingHorizontal: 20,
   },
   formContainer: {
     padding: 20,
@@ -490,79 +500,79 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   label: {
-    fontFamily: 'HindSiliguri_600SemiBold',
+    fontFamily: "HindSiliguri_600SemiBold",
     fontSize: 15,
-    color: '#333',
+    color: "#333",
     marginBottom: 8,
   },
   subLabel: {
-    fontFamily: 'HindSiliguri_500Medium',
+    fontFamily: "HindSiliguri_500Medium",
     fontSize: 14,
-    color: '#555',
+    color: "#555",
     marginBottom: 5,
   },
   input: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 15,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    fontFamily: 'HindSiliguri_400Regular',
+    borderColor: "#ddd",
+    fontFamily: "HindSiliguri_400Regular",
     fontSize: 15,
-    color: '#333',
+    color: "#333",
   },
   inputError: {
-    borderColor: '#d32f2f',
+    borderColor: "#d32f2f",
   },
   dateInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 15,
   },
   dateText: {
     flex: 1,
-    fontFamily: 'HindSiliguri_400Regular',
-    color: '#333',
+    fontFamily: "HindSiliguri_400Regular",
+    color: "#333",
     marginLeft: 10,
   },
   errorText: {
-    fontFamily: 'HindSiliguri_400Regular',
-    color: '#d32f2f',
+    fontFamily: "HindSiliguri_400Regular",
+    color: "#d32f2f",
     fontSize: 12,
     marginTop: 5,
   },
   submitButton: {
-    backgroundColor: '#d32f2f',
+    backgroundColor: "#d32f2f",
     height: 50,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 15,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   submitButtonText: {
-    fontFamily: 'HindSiliguri_600SemiBold',
-    color: '#fff',
+    fontFamily: "HindSiliguri_600SemiBold",
+    color: "#fff",
     fontSize: 16,
   },
   loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 20,
   },
   loginText: {
-    fontFamily: 'HindSiliguri_400Regular',
-    color: '#666',
+    fontFamily: "HindSiliguri_400Regular",
+    color: "#666",
     marginRight: 5,
   },
   loginLink: {
-    fontFamily: 'HindSiliguri_600SemiBold',
-    color: '#d32f2f',
+    fontFamily: "HindSiliguri_600SemiBold",
+    color: "#d32f2f",
   },
 });
