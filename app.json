@@ -43,8 +43,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "3ecb5b5f-75de-488a-8095-11a98d712bd7"
+        "projectId": "d6b8151b-14e5-4c38-a20b-6c1f7b31e327"
       }
-    }
+    },
+    "owner": "devwitheasy"
   }
 }

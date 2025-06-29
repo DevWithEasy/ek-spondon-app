@@ -9,10 +9,9 @@ import {
   Text,
   TextInput,
   View,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
-import RNPickerSelect from "react-native-picker-select";
-import { MaterialIcons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 
 export default function BloodRequestForm() {
   const [formData, setFormData] = useState({
@@ -29,11 +28,22 @@ export default function BloodRequestForm() {
   const [errors, setErrors] = useState({});
   const [donateDate, setDonateDate] = useState(null);
 
+  const bloodGroups = [
+    { label: "এ+", value: "A+" },
+    { label: "এ-", value: "A-" },
+    { label: "বি+", value: "B+" },
+    { label: "বি-", value: "B-" },
+    { label: "ও+", value: "O+" },
+    { label: "ও-", value: "O-" },
+    { label: "এবি+", value: "AB+" },
+    { label: "এবি-", value: "AB-" },
+  ];
+
   const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors({...errors, [name]: ''});
+      setErrors({ ...errors, [name]: "" });
     }
   };
 
@@ -41,9 +51,12 @@ export default function BloodRequestForm() {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "নাম লিখুন";
     if (!formData.problem.trim()) newErrors.problem = "সমস্যার বর্ণনা লিখুন";
-    if (!formData.bloodGroup) newErrors.bloodGroup = "রক্তের গ্রুপ নির্বাচন করুন";
-    if (!formData.hemoglobin.trim()) newErrors.hemoglobin = "হিমোগ্লোবিনের পরিমাণ লিখুন";
-    if (!formData.request_bag.trim()) newErrors.request_bag = "ব্যাগ সংখ্যা লিখুন";
+    if (!formData.bloodGroup)
+      newErrors.bloodGroup = "রক্তের গ্রুপ নির্বাচন করুন";
+    if (!formData.hemoglobin.trim())
+      newErrors.hemoglobin = "হিমোগ্লোবিনের পরিমাণ লিখুন";
+    if (!formData.request_bag.trim())
+      newErrors.request_bag = "ব্যাগ সংখ্যা লিখুন";
     if (!formData.location.trim()) newErrors.location = "অবস্থান লিখুন";
     if (!formData.phone.trim()) newErrors.phone = "ফোন নম্বর লিখুন";
     else if (!/^(?:\+88|01)?(?:\d{11}|\d{13})$/.test(formData.phone)) {
@@ -83,31 +96,11 @@ export default function BloodRequestForm() {
               location: "",
               phone: "",
             });
-          }
-        }
+            setDonateDate(null);
+          },
+        },
       ]
     );
-  };
-
-  const pickerSelectStyles = {
-    inputIOS: {
-      ...styles.input,
-      paddingRight: 30,
-      borderColor: errors.bloodGroup ? "#d32f2f" : "#ddd",
-    },
-    inputAndroid: {
-      ...styles.input,
-      paddingRight: 30,
-      borderColor: errors.bloodGroup ? "#d32f2f" : "#ddd",
-    },
-    placeholder: {
-      color: "#b3b6b7",
-      fontFamily: "HindSiliguri_400Regular",
-    },
-    iconContainer: {
-      top: 15,
-      right: 12,
-    },
   };
 
   return (
@@ -125,6 +118,7 @@ export default function BloodRequestForm() {
             নিচের ফর্মটি পূরণ করে রক্তদানের অনুরোধ করুন। আপনার তথ্য সঠিকভাবে
             প্রদান করুন যাতে আমরা দ্রুত আপনার সাহায্য করতে পারি।
           </Text>
+          
           {/* Name */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>পূর্ণ নাম</Text>
@@ -147,9 +141,9 @@ export default function BloodRequestForm() {
               value={formData.problem}
               onChangeText={(text) => handleInputChange("problem", text)}
               style={[
-                styles.input, 
+                styles.input,
                 styles.multilineInput,
-                errors.problem && styles.inputError
+                errors.problem && styles.inputError,
               ]}
               multiline
               numberOfLines={4}
@@ -197,29 +191,23 @@ export default function BloodRequestForm() {
           {/* Blood Group */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>রক্তের গ্রুপ</Text>
-            <RNPickerSelect
-              onValueChange={(value) => handleInputChange("bloodGroup", value)}
-              value={formData.bloodGroup}
-              placeholder={{
-                label: "রক্তের গ্রুপ নির্বাচন করুন...",
-                value: null,
-              }}
-              items={[
-                { label: "A+", value: "A+" },
-                { label: "A-", value: "A-" },
-                { label: "B+", value: "B+" },
-                { label: "B-", value: "B-" },
-                { label: "O+", value: "O+" },
-                { label: "O-", value: "O-" },
-                { label: "AB+", value: "AB+" },
-                { label: "AB-", value: "AB-" },
-              ]}
-              style={pickerSelectStyles}
-              useNativeAndroidPickerStyle={false}
-              Icon={() => (
-                <MaterialIcons name="arrow-drop-down" size={24} color="#d32f2f" />
-              )}
-            />
+            <View style={[styles.pickerContainer, errors.bloodGroup && styles.inputError]}>
+              <Picker
+                selectedValue={formData.bloodGroup}
+                onValueChange={(value) => handleInputChange("bloodGroup", value)}
+                style={styles.picker}
+                dropdownIconColor="#666"
+              >
+                <Picker.Item label="রক্তের গ্রুপ নির্বাচন করুন" value="" />
+                {bloodGroups.map((group) => (
+                  <Picker.Item 
+                    key={group.value} 
+                    label={group.label} 
+                    value={group.value} 
+                  />
+                ))}
+              </Picker>
+            </View>
             {errors.bloodGroup && (
               <Text style={styles.errorText}>{errors.bloodGroup}</Text>
             )}
@@ -227,7 +215,7 @@ export default function BloodRequestForm() {
 
           {/* Date Picker */}
           <SimpleDateInput
-            title = 'রক্তদানের তারিখ'
+            title="রক্তদানের তারিখ"
             value={donateDate}
             onChange={(date) => setDonateDate(date)}
             error={errors.donateDate}
@@ -266,10 +254,7 @@ export default function BloodRequestForm() {
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity
-            onPress={handleSubmit}
-            style={styles.submitButton}
-          >
+          <TouchableOpacity onPress={handleSubmit} style={styles.submitButton}>
             <Text style={styles.submitButtonText}>অনুরোধ জমা দিন</Text>
           </TouchableOpacity>
         </View>
@@ -286,22 +271,22 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     paddingBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   headerTitle: {
     fontSize: 20,
-    fontFamily: 'HindSiliguri_600SemiBold',
-    color: '#d32f2f',
+    fontFamily: "HindSiliguri_600SemiBold",
+    color: "#d32f2f",
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: 'HindSiliguri_400Regular',
-    color: '#666',
+    fontFamily: "HindSiliguri_400Regular",
+    color: "#666",
     lineHeight: 20,
-    marginBottom : 10
+    marginBottom: 10,
   },
   formContainer: {
     padding: 20,
@@ -309,69 +294,82 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 15,
   },
+  pickerContainer: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    overflow: "hidden",
+  },
+  picker: {
+    width: "100%",
+    height: 50,
+    color: "#333",
+  },
   label: {
-    fontFamily: 'HindSiliguri_600SemiBold',
+    fontFamily: "HindSiliguri_600SemiBold",
     fontSize: 15,
-    color: '#333',
+    color: "#333",
     marginBottom: 8,
   },
   input: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 15,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    fontFamily: 'HindSiliguri_400Regular',
+    borderColor: "#ddd",
+    fontFamily: "HindSiliguri_400Regular",
     fontSize: 15,
-    color: '#333',
+    color: "#333",
   },
   inputError: {
-    borderColor: '#d32f2f',
+    borderColor: "#d32f2f",
   },
   multilineInput: {
     height: 100,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     paddingTop: 15,
   },
   errorText: {
-    fontFamily: 'HindSiliguri_400Regular',
-    color: '#d32f2f',
+    fontFamily: "HindSiliguri_400Regular",
+    color: "#d32f2f",
     fontSize: 12,
     marginTop: 5,
   },
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   dateInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 15,
   },
   dateText: {
     flex: 1,
-    fontFamily: 'HindSiliguri_400Regular',
-    color: '#333',
+    fontFamily: "HindSiliguri_400Regular",
+    color: "#333",
     marginLeft: 10,
   },
   submitButton: {
-    backgroundColor: '#d32f2f',
+    backgroundColor: "#d32f2f",
     height: 50,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 10,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   submitButtonText: {
-    fontFamily: 'HindSiliguri_600SemiBold',
-    color: '#fff',
+    fontFamily: "HindSiliguri_600SemiBold",
+    color: "#fff",
     fontSize: 16,
   },
 });

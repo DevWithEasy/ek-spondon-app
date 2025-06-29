@@ -1,6 +1,5 @@
-import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import SimpleDateInput from "../src/components/SimpleDateInput";
+import { Picker } from '@react-native-picker/picker';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -15,10 +14,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import RNPickerSelect from "react-native-picker-select";
 import districts from "../assets/json/districts.json";
 import divisions from "../assets/json/divisions.json";
 import upazilas from "../assets/json/upazilas.json";
+import SimpleDateInput from "../src/components/SimpleDateInput";
 
 export default function Signup() {
   const router = useRouter();
@@ -75,7 +74,6 @@ export default function Signup() {
   };
 
   const handleInputChange = (name, value) => {
-    // Reset dependent fields when division or district changes
     if (name === "division") {
       setFormData({
         ...formData,
@@ -93,7 +91,6 @@ export default function Signup() {
       setFormData({ ...formData, [name]: value });
     }
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
     }
@@ -148,9 +145,7 @@ export default function Signup() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
       await AsyncStorage.setItem("isLoggedIn", JSON.stringify(true));
       Alert.alert("সফল!", "আপনার একাউন্ট সফলভাবে তৈরি হয়েছে");
       router.replace("/");
@@ -162,38 +157,16 @@ export default function Signup() {
     }
   };
 
-  const pickerSelectStyles = {
-    inputIOS: {
-      ...styles.input,
-      paddingRight: 30,
-      borderColor: errors.bloodGroup ? "#d32f2f" : "#ddd",
-    },
-    inputAndroid: {
-      ...styles.input,
-      paddingRight: 30,
-      borderColor: errors.bloodGroup ? "#d32f2f" : "#ddd",
-    },
-    placeholder: {
-      color: "#b3b6b7",
-      fontFamily: "HindSiliguri_400Regular",
-    },
-    iconContainer: {
-      top: 15,
-      right: 12,
-    },
-  };
-
-  const locationPickerStyles = (fieldName) => ({
-    ...pickerSelectStyles,
-    inputIOS: {
-      ...pickerSelectStyles.inputIOS,
-      borderColor: errors[fieldName] ? "#d32f2f" : "#ddd",
-    },
-    inputAndroid: {
-      ...pickerSelectStyles.inputAndroid,
-      borderColor: errors[fieldName] ? "#d32f2f" : "#ddd",
-    },
-  });
+  const bloodGroups = [
+    { label: "A+", value: "A+" },
+    { label: "A-", value: "A-" },
+    { label: "B+", value: "B+" },
+    { label: "B-", value: "B-" },
+    { label: "O+", value: "O+" },
+    { label: "O-", value: "O-" },
+    { label: "AB+", value: "AB+" },
+    { label: "AB-", value: "AB-" },
+  ];
 
   return (
     <KeyboardAvoidingView
@@ -209,6 +182,7 @@ export default function Signup() {
           দিয়ে একাউন্ট করে আপনিও হতে পারেন একজন গর্বিত ডোনার এবং আপনি খুঁজে নিন
           অমুল্য রক্ত ডোনারদের কাছ থেকে।
         </Text>
+        
         {/* Form */}
         <View style={styles.formContainer}>
           {/* Name */}
@@ -225,7 +199,7 @@ export default function Signup() {
           </View>
 
           <SimpleDateInput
-            title = 'জন্মতারিখ'
+            title="জন্মতারিখ"
             value={birthDate}
             onChange={(date) => setBirthDate(date)}
             error={errors.birthDate}
@@ -234,33 +208,23 @@ export default function Signup() {
           {/* Blood Group */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>রক্তের গ্রুপ</Text>
-            <RNPickerSelect
-              onValueChange={(value) => handleInputChange("bloodGroup", value)}
-              value={formData.bloodGroup}
-              placeholder={{
-                label: "রক্তের গ্রুপ নির্বাচন করুন...",
-                value: null,
-              }}
-              items={[
-                { label: "A+", value: "A+" },
-                { label: "A-", value: "A-" },
-                { label: "B+", value: "B+" },
-                { label: "B-", value: "B-" },
-                { label: "O+", value: "O+" },
-                { label: "O-", value: "O-" },
-                { label: "AB+", value: "AB+" },
-                { label: "AB-", value: "AB-" },
-              ]}
-              style={pickerSelectStyles}
-              useNativeAndroidPickerStyle={false}
-              Icon={() => (
-                <MaterialIcons
-                  name="arrow-drop-down"
-                  size={24}
-                  color="#d32f2f"
-                />
-              )}
-            />
+            <View style={[styles.pickerContainer, errors.bloodGroup && styles.inputError]}>
+              <Picker
+                selectedValue={formData.bloodGroup}
+                onValueChange={(value) => handleInputChange("bloodGroup", value)}
+                style={styles.picker}
+                dropdownIconColor="#d32f2f"
+              >
+                <Picker.Item label="রক্তের গ্রুপ নির্বাচন করুন" value="" />
+                {bloodGroups.map((group) => (
+                  <Picker.Item 
+                    key={group.value} 
+                    label={group.label} 
+                    value={group.value} 
+                  />
+                ))}
+              </Picker>
+            </View>
             {errors.bloodGroup && (
               <Text style={styles.errorText}>{errors.bloodGroup}</Text>
             )}
@@ -272,86 +236,80 @@ export default function Signup() {
 
             {/* Division */}
             <Text style={styles.subLabel}>বিভাগ</Text>
-            <RNPickerSelect
-              onValueChange={(value) => handleInputChange("division", value)}
-              value={formData.division}
-              placeholder={{
-                label: "বিভাগ নির্বাচন করুন...",
-                value: null,
-              }}
-              items={divisions.map((division) => ({
-                label: division.bn_name,
-                value: division,
-                key: division.id,
-              }))}
-              style={locationPickerStyles("division")}
-              useNativeAndroidPickerStyle={false}
-              Icon={() => (
-                <MaterialIcons
-                  name="arrow-drop-down"
-                  size={24}
-                  color="#d32f2f"
-                />
-              )}
-            />
+            <View style={[styles.pickerContainer, errors.division && styles.inputError]}>
+              <Picker
+                selectedValue={formData.division ? formData.division.id : ""}
+                onValueChange={(value) => {
+                  const selected = divisions.find(d => d.id === value);
+                  handleInputChange("division", selected);
+                }}
+                style={styles.picker}
+                dropdownIconColor="#d32f2f"
+              >
+                <Picker.Item label="বিভাগ নির্বাচন করুন" value="" />
+                {divisions.map((division) => (
+                  <Picker.Item 
+                    key={division.id} 
+                    label={division.bn_name} 
+                    value={division.id} 
+                  />
+                ))}
+              </Picker>
+            </View>
             {errors.division && (
               <Text style={styles.errorText}>{errors.division}</Text>
             )}
 
             {/* District */}
             <Text style={[styles.subLabel, { marginTop: 10 }]}>জেলা</Text>
-            <RNPickerSelect
-              onValueChange={(value) => handleInputChange("district", value)}
-              value={formData.district}
-              placeholder={{
-                label: "জেলা নির্বাচন করুন...",
-                value: null,
-              }}
-              items={filteredDistricts.map((district) => ({
-                label: district.bn_name,
-                value: district,
-                key: district.id,
-              }))}
-              disabled={!formData.division}
-              style={locationPickerStyles("district")}
-              useNativeAndroidPickerStyle={false}
-              Icon={() => (
-                <MaterialIcons
-                  name="arrow-drop-down"
-                  size={24}
-                  color="#d32f2f"
-                />
-              )}
-            />
+            <View style={[styles.pickerContainer, errors.district && styles.inputError]}>
+              <Picker
+                selectedValue={formData.district ? formData.district.id : ""}
+                onValueChange={(value) => {
+                  const selected = filteredDistricts.find(d => d.id === value);
+                  handleInputChange("district", selected);
+                }}
+                style={styles.picker}
+                dropdownIconColor="#d32f2f"
+                enabled={!!formData.division}
+              >
+                <Picker.Item label="জেলা নির্বাচন করুন" value="" />
+                {filteredDistricts.map((district) => (
+                  <Picker.Item 
+                    key={district.id} 
+                    label={district.bn_name} 
+                    value={district.id} 
+                  />
+                ))}
+              </Picker>
+            </View>
             {errors.district && (
               <Text style={styles.errorText}>{errors.district}</Text>
             )}
 
             {/* Upazila */}
             <Text style={[styles.subLabel, { marginTop: 10 }]}>উপজেলা</Text>
-            <RNPickerSelect
-              onValueChange={(value) => handleInputChange("upazila", value)}
-              value={formData.upazila}
-              placeholder={{
-                label: "উপজেলা নির্বাচন করুন...",
-                value: null,
-              }}
-              items={filteredUpazilas.map((upazila) => ({
-                label: upazila.bn_name,
-                value: upazila,
-                key: upazila.id,
-              }))}
-              disabled={!formData.district}
-              style={locationPickerStyles("upazila")}
-              useNativeAndroidPickerStyle={false}
-              Icon={() => (
-                <MaterialIcons
-                  name="arrow-drop-down"
-                  size={24}
-                  color="#d32f2f"
-                />
-              )}
-            />
+            <View style={[styles.pickerContainer, errors.upazila && styles.inputError]}>
+              <Picker
+                selectedValue={formData.upazila ? formData.upazila.id : ""}
+                onValueChange={(value) => {
+                  const selected = filteredUpazilas.find(u => u.id === value);
+                  handleInputChange("upazila", selected);
+                }}
+                style={styles.picker}
+                dropdownIconColor="#d32f2f"
+                enabled={!!formData.district}
+              >
+                <Picker.Item label="উপজেলা নির্বাচন করুন" value="" />
+                {filteredUpazilas.map((upazila) => (
+                  <Picker.Item 
+                    key={upazila.id} 
+                    label={upazila.bn_name} 
+                    value={upazila.id} 
+                  />
+                ))}
+              </Picker>
+            </View>
             {errors.upazila && (
               <Text style={styles.errorText}>{errors.upazila}</Text>
             )}
@@ -368,14 +326,6 @@ export default function Signup() {
               keyboardType="email-address"
               autoCapitalize="none"
               style={[styles.input, errors.email && styles.inputError]}
-              onBlur={() => {
-                if (formData.email && !validateEmail(formData.email)) {
-                  setErrors({
-                    ...errors,
-                    email: "সঠিক ই-মেইল লিখুন",
-                  });
-                }
-              }}
             />
             {errors.email && (
               <Text style={styles.errorText}>{errors.email}</Text>
@@ -392,15 +342,6 @@ export default function Signup() {
               onChangeText={(text) => handleInputChange("password", text)}
               secureTextEntry
               style={[styles.input, errors.password && styles.inputError]}
-              onBlur={() => {
-                if (formData.password && !validatePassword(formData.password)) {
-                  setErrors({
-                    ...errors,
-                    password:
-                      "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের এবং অক্ষর ও সংখ্যা থাকতে হবে",
-                  });
-                }
-              }}
             />
             {errors.password && (
               <Text style={styles.errorText}>{errors.password}</Text>
@@ -414,25 +355,9 @@ export default function Signup() {
               placeholder="পাসওয়ার্ড আবার লিখুন"
               placeholderTextColor="#b3b6b7"
               value={formData.confirmPassword}
-              onChangeText={(text) =>
-                handleInputChange("confirmPassword", text)
-              }
+              onChangeText={(text) => handleInputChange("confirmPassword", text)}
               secureTextEntry
-              style={[
-                styles.input,
-                errors.confirmPassword && styles.inputError,
-              ]}
-              onBlur={() => {
-                if (
-                  formData.confirmPassword &&
-                  formData.password !== formData.confirmPassword
-                ) {
-                  setErrors({
-                    ...errors,
-                    confirmPassword: "পাসওয়ার্ড মিলছে না",
-                  });
-                }
-              }}
+              style={[styles.input, errors.confirmPassword && styles.inputError]}
             />
             {errors.confirmPassword && (
               <Text style={styles.errorText}>{errors.confirmPassword}</Text>
@@ -470,23 +395,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 30,
   },
-  header: {
-    alignItems: "center",
-    padding: 20,
-    paddingBottom: 10,
-  },
-  logo: {
-    height: 80,
-    width: 80,
-    borderRadius: 40,
-    marginBottom: 10,
-  },
-  tagline: {
-    fontFamily: "HindSiliguri_600SemiBold",
-    fontSize: 16,
-    color: "#d32f2f",
-    marginBottom: 5,
-  },
   subtitle: {
     fontFamily: "HindSiliguri_400Regular",
     fontSize: 14,
@@ -523,19 +431,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
   },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    color: '#333',
+  },
   inputError: {
-    borderColor: "#d32f2f",
-  },
-  dateInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 15,
-  },
-  dateText: {
-    flex: 1,
-    fontFamily: "HindSiliguri_400Regular",
-    color: "#333",
-    marginLeft: 10,
+    borderColor: '#d32f2f',
   },
   errorText: {
     fontFamily: "HindSiliguri_400Regular",
@@ -550,11 +458,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 15,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   submitButtonText: {
     fontFamily: "HindSiliguri_600SemiBold",

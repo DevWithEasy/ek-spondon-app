@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { Modal, View, Text, Pressable, StyleSheet, Alert } from "react-native";
-import RNPickerSelect from "react-native-picker-select";
-import { MaterialIcons } from '@expo/vector-icons';
+import { useEffect, useState } from "react";
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import districts from "../../assets/json/districts.json";
 import upazilas from "../../assets/json/upazilas.json";
+import { Picker } from '@react-native-picker/picker';
 
 export default function SearchModal({ visible, onClose, setDonars }) {
   const [formData, setFormData] = useState({
@@ -50,7 +49,7 @@ export default function SearchModal({ visible, onClose, setDonars }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleLogin = async () => {
+  const handleSearch = async () => {
     if (!validateForm()) return;
     try {
       onClose();
@@ -102,59 +101,21 @@ export default function SearchModal({ visible, onClose, setDonars }) {
         },
       ]);
     } catch (e) {
-      console.error("Error during login:", e);
+      console.error("Error during search:", e);
       Alert.alert("Error", "Something went wrong. Please try again later.");
     }
   };
 
-  const pickerSelectStyles = {
-    inputIOS: {
-      fontFamily: "HindSiliguri_400Regular",
-      height: 52,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderWidth: 1,
-      borderColor: "#ddd",
-      color: "black",
-      backgroundColor: "#fff",
-      borderRadius: 8,
-    },
-    inputAndroid: {
-      fontFamily: "HindSiliguri_400Regular",
-      height: 52,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderWidth: 1,
-      borderColor: "#ddd",
-      color: "black",
-      backgroundColor: "#fff",
-      borderRadius: 8,
-    },
-    placeholder: {
-      color: "#b3b6b7",
-    },
-    iconContainer: {
-      top: 15,
-      right: 12,
-    },
-  };
-
-  const locationPickerStyles = (fieldName) => ({
-    ...pickerSelectStyles,
-    inputIOS: {
-      ...pickerSelectStyles.inputIOS,
-      borderColor: errors[fieldName] ? "red" : "#ddd",
-    },
-    inputAndroid: {
-      ...pickerSelectStyles.inputAndroid,
-      borderColor: errors[fieldName] ? "red" : "#ddd",
-    },
-  });
-
-  // Custom dropdown icon component
-  const DropdownIcon = () => (
-    <MaterialIcons name="arrow-drop-down" size={24} color="#d32f2f" />
-  );
+  const bloodGroups = [
+    { label: "A+", value: "A+" },
+    { label: "A-", value: "A-" },
+    { label: "B+", value: "B+" },
+    { label: "B-", value: "B-" },
+    { label: "O+", value: "O+" },
+    { label: "O-", value: "O-" },
+    { label: "AB+", value: "AB+" },
+    { label: "AB-", value: "AB-" },
+  ];
 
   return (
     <Modal
@@ -171,98 +132,84 @@ export default function SearchModal({ visible, onClose, setDonars }) {
 
           <View style={styles.modalContent}>
             {/* Blood Group Picker */}
-            <View style={{ width: "100%", marginBottom: 10 }}>
-              <RNPickerSelect
+            <View style={[styles.pickerContainer, errors.bloodGroup && styles.inputError]}>
+              <Picker
+                selectedValue={formData.bloodGroup}
                 onValueChange={(value) => handleInputChange("bloodGroup", value)}
-                value={formData.bloodGroup}
-                placeholder={{
-                  label: "রক্তের গ্রুপ নির্বাচন করুন",
-                  value: null,
-                  color: "#b3b6b7",
-                }}
-                items={[
-                  { label: "A+", value: "A+" },
-                  { label: "A-", value: "A-" },
-                  { label: "B+", value: "B+" },
-                  { label: "B-", value: "B-" },
-                  { label: "O+", value: "O+" },
-                  { label: "O-", value: "O-" },
-                  { label: "AB+", value: "AB+" },
-                  { label: "AB-", value: "AB-" },
-                ]}
-                style={pickerSelectStyles}
-                useNativeAndroidPickerStyle={false}
-                Icon={DropdownIcon}
-                fixAndroidTouchableBug={true}
-              />
+                style={styles.picker}
+                dropdownIconColor="#d32f2f"
+              >
+                <Picker.Item label="রক্তের গ্রুপ নির্বাচন করুন" value="" />
+                {bloodGroups.map((group) => (
+                  <Picker.Item 
+                    key={group.value} 
+                    label={group.label} 
+                    value={group.value} 
+                  />
+                ))}
+              </Picker>
               {errors.bloodGroup && (
                 <Text style={styles.errorText}>{errors.bloodGroup}</Text>
               )}
             </View>
 
             {/* District Picker */}
-            <View style={{ width: "100%", marginBottom: 10 }}>
-              <RNPickerSelect
-                onValueChange={(value) => handleInputChange("district", value)}
-                value={formData.district}
-                placeholder={{
-                  label: "জেলা নির্বাচন করুন",
-                  value: null,
-                  color: "#b3b6b7",
+            <View style={[styles.pickerContainer, errors.district && styles.inputError]}>
+              <Picker
+                selectedValue={formData.district ? formData.district.id : ""}
+                onValueChange={(value) => {
+                  const selected = districts.find(d => d.id === value);
+                  handleInputChange("district", selected);
                 }}
-                items={districts.map((district) => ({
-                  label: district.bn_name,
-                  value: district,
-                  key: district.id,
-                }))}
-                style={locationPickerStyles("district")}
-                useNativeAndroidPickerStyle={false}
-                Icon={DropdownIcon}
-                fixAndroidTouchableBug={true}
-              />
+                style={styles.picker}
+                dropdownIconColor="#d32f2f"
+              >
+                <Picker.Item label="জেলা নির্বাচন করুন" value="" />
+                {districts.map((district) => (
+                  <Picker.Item 
+                    key={district.id} 
+                    label={district.bn_name} 
+                    value={district.id} 
+                  />
+                ))}
+              </Picker>
               {errors.district && (
                 <Text style={styles.errorText}>{errors.district}</Text>
               )}
             </View>
 
             {/* Upazila Picker */}
-            <View style={{ width: "100%", marginBottom: 10 }}>
-              <RNPickerSelect
-                onValueChange={(value) => handleInputChange("upazila", value)}
-                value={formData.upazila}
-                placeholder={{
-                  label: "উপজেলা নির্বাচন করুন",
-                  value: null,
-                  color: "#b3b6b7",
+            <View style={[styles.pickerContainer, errors.upazila && styles.inputError]}>
+              <Picker
+                selectedValue={formData.upazila ? formData.upazila.id : ""}
+                onValueChange={(value) => {
+                  const selected = filteredUpazilas.find(u => u.id === value);
+                  handleInputChange("upazila", selected);
                 }}
-                items={filteredUpazilas.map((upazila) => ({
-                  label: upazila.bn_name,
-                  value: upazila,
-                  key: upazila.id,
-                }))}
-                disabled={!formData.district}
-                style={locationPickerStyles("upazila")}
-                useNativeAndroidPickerStyle={false}
-                Icon={DropdownIcon}
-                fixAndroidTouchableBug={true}
-              />
+                style={styles.picker}
+                dropdownIconColor="#d32f2f"
+                enabled={!!formData.district}
+              >
+                <Picker.Item label="উপজেলা নির্বাচন করুন" value="" />
+                {filteredUpazilas.map((upazila) => (
+                  <Picker.Item 
+                    key={upazila.id} 
+                    label={upazila.bn_name} 
+                    value={upazila.id} 
+                  />
+                ))}
+              </Picker>
               {errors.upazila && (
                 <Text style={styles.errorText}>{errors.upazila}</Text>
               )}
             </View>
 
-            <View
-              style={{
-                width: "100%",
-                flexDirection: "row",
-                justifyContent: "space-between",
-              }}
-            >
+            <View style={styles.buttonContainer}>
               <Pressable style={styles.closeButton} onPress={onClose}>
                 <Text style={styles.closeButtonText}>বন্ধ করুন</Text>
               </Pressable>
               <Pressable
-                onPress={handleLogin}
+                onPress={handleSearch}
                 style={styles.searchButton}
               >
                 <Text style={styles.searchButtonText}>অনুসন্ধান করুন</Text>
@@ -297,13 +244,33 @@ const styles = StyleSheet.create({
   modalContent: {
     marginBottom: 20,
   },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    color: '#333',
+  },
+  inputError: {
+    borderColor: 'red',
+  },
+  buttonContainer: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
   closeButton: {
     width: "49%",
     height: 50,
     backgroundColor: "#a2a3a3",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#ddd",
@@ -315,10 +282,9 @@ const styles = StyleSheet.create({
   searchButton: {
     width: "49%",
     height: 50,
-    backgroundColor: "#007AFF",
+    backgroundColor: "#d32f2f",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#ddd",
